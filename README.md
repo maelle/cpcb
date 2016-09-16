@@ -4,7 +4,7 @@ The primary goal of the code of this repo is to learn how to automatically scrap
 
 # Retrieving PM2.5 data for Hyderabad
 
- My first goal (and primary motivation) is to get all PM2.5 data for the two stations in Hyderabad, see [this file](code/pm25_hyderabad.R). The function for scraping data for a given day and location is in [this file](code/utils.R). Note that when running, the code would sometimes have random errors (5 times in total maybe?) and I would have to relaunch it, changing the start date in order not to download the same data twice. E.g.
+ My first goal (and primary motivation) is to get all PM2.5 data for the two stations in Hyderabad, see [this file](code/pm25_hyderabad.R). The function for scraping data for a given day and location is in [this file](code/utils.R). Note that when running, the code would sometimes have random errors (15 times in total maybe?) and I would have to relaunch it, changing the start date in order not to download the same data twice. E.g.
 
 ```r
 table_hyderabad <- tibble_(list(location = ~c("Hyderabad", "ZooPark"),
