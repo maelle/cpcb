@@ -4,75 +4,31 @@ library("dplyr")
 library("lubridate")
 library("tibble")
 library("lazyeval")
+library("purrr")
+library("stringr")
+source("code/utils.R")
 
-RSelenium::startServer(args = c("-Dwebdriver.chrome.driver=C:/Users/Maelle/Documents/cpcb/chromedriver.exe")
+RSelenium::startServer(args = c("-Dwebdriver.chrome.driver=C:/Users/msalmon.ISGLOBAL/Documents/cpcb/chromedriver.exe")
                        , log = FALSE, invisible = FALSE)
 remDr <- remoteDriver(browserName = "chrome")
 
 # open Chrome
 remDr$open()
 # go to webpage
-remDr$navigate("http://www.cpcb.gov.in/CAAQM/frmUserAvgReportCriteria.aspx")
 
-# select state, city, location
-webElem <- remDr$findElement(using = 'id', value = "ddlState")
-webElem$sendKeysToElement(list("Telangana"))
-Sys.sleep(1)
-webElem <- remDr$findElement(using = 'id', value = "ddlCity")
-webElem$sendKeysToElement(list("Hyderabad"))
-Sys.sleep(1)
-webElem <- remDr$findElement(using = 'id', value = "ddlStation")
-webElem$sendKeysToElement(list("Hyderabad"))
-Sys.sleep(1)
 
-# select PM2.5
-webElem <- remDr$findElement(using = 'id', value = "lstBoxChannelLeft")
-webElem$clickElement()
-for(i in 1:15){
-  webElem$sendKeysToElement(list(key = "down_arrow"))
-}
-Sys.sleep(1)
+table_hyderabad <- tibble_(list(location = ~c("Hyderabad", "ZooPark"),
+                                date_min = ~c(ymd("2016-09-12"), ymd("2016-09-12")),
+                                no_parameters = ~c(15, 4)))
+table_hyderabad <- filter(table_hyderabad, location == "ZooPark")
+table_hyderabad <- group_by(table_hyderabad, location)
+table_hyderabad <- mutate_(table_hyderabad,
+                           date_min = interp(~list(seq(from = date_min, to = Sys.Date(),
+                                           by = "1 day"))))
+table_hyderabad <- unnest_(table_hyderabad, "date_min")
 
-webElem <- remDr$findElement(using = 'id', value = "btnAdd")
-webElem$clickElement()
-Sys.sleep(1)
+table_hyderabad <- table_hyderabad %>% 
+  by_row(function(df){
+    retrieve_data(df$location, df$date_min, remDr)
+  })
 
-# select hourly values
-webElem <- remDr$findElement(using = 'id', value = "ddlCriteria")
-webElem$sendKeysToElement(list("1 Hours"))
-Sys.sleep(1)
-
-# choose start and end dates 
-webElem <- remDr$findElement(using = 'id', value = "txtDateFrom")
-webElem$clearElement()
-webElem$sendKeysToElement(list("08/09/2016"))
-Sys.sleep(1)
-
-# submit
-webElem <- remDr$findElement(using = 'id', value = "btnSubmit")
-webElem$clickElement()
-Sys.sleep(1)
-
-# get table and wrangle it
-webElem <- remDr$findElement(using = 'id', value = "gvReportStation")
-table <- webElem$getElementText()
-table <- strsplit(table[[1]], "\n")[[1]]
-table <- tibble_(list(content = ~table[4:length(table)]))
-table <- separate_(table, "content", sep = "  ",
-                  into = c("parameter", "start_time", "end_time",
-                           "date", "unit"))
-table <- separate_(table, "date", sep = " ",
-                   into = c("date", "concentration"))
-table <- select_(table, quote(- parameter))
-table <- mutate_(table, row = interp(~1:nrow(table)))
-table <- group_by_(table, "row")
-table <- mutate_(table, start = interp(~dmy_hms(paste(date, start_time))))
-table <- mutate_(table, start = interp(~ force_tz(start, tzone = "Asia/Kolkata")))
-table <- mutate_(table, end = interp(~dmy_hms(paste(date, end_time))))
-table <- mutate_(table, end = interp(~ force_tz(start, tzone = "Asia/Kolkata")))
-table <- select_(table, quote(- date))
-table <- select_(table, quote(- start_time))
-table <- select_(table, quote(- end_time))
-table <- ungroup(table)
-table <- select_(table, quote(- row))
-table <- mutate_(table, unit = interp(~gsub(" NA NA", "", unit)))
