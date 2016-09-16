@@ -1,6 +1,7 @@
 
-retrieve_data <- function(location, date_min, remDr){
+retrieve_data <- function(location, date_min, no_parameters, remDr){
   Sys.sleep(1)
+  remDr$open(silent = TRUE)
   remDr$navigate("http://www.cpcb.gov.in/CAAQM/frmUserAvgReportCriteria.aspx")
   Sys.sleep(1)
   # select state, city, location
@@ -64,7 +65,6 @@ retrieve_data <- function(location, date_min, remDr){
                                 "date", "unit"))
     table <- separate_(table, "date", sep = " ",
                        into = c("date", "concentration"))
-    table <- select_(table, quote(- parameter))
     table <- mutate_(table, row = interp(~1:nrow(table)))
     table <- group_by_(table, "row")
     table <- mutate_(table, start = interp(~dmy_hms(paste(date, start_time))))
@@ -81,12 +81,14 @@ retrieve_data <- function(location, date_min, remDr){
     
     webElem <- remDr$findElement(using = 'id', value = "btnClose")
     webElem$clickElement()
+    remDr$close()
     return(table)
   } else{
     # previous page
     
     webElem <- remDr$findElement(using = 'id', value = "btnClose")
     webElem$clickElement()
+    remDr$close()
     return(tibble())
   }
   
