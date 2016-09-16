@@ -8,17 +8,16 @@ library("purrr")
 library("stringr")
 source("code/utils.R")
 
-RSelenium::startServer(args = c("-Dwebdriver.chrome.driver=C:/Users/msalmon.ISGLOBAL/Documents/cpcb/chromedriver.exe")
-                       , log = FALSE, invisible = FALSE)
-remDr <- remoteDriver(browserName = "chrome")
-
+eCap <- list(phantomjs.binary.path = "C:/Users/msalmon.ISGLOBAL/Documents/phantomjs-2.1.1-windows/phantomjs-2.1.1-windows/bin/phantomjs.exe")
+remDr <- remoteDriver(browserName = "phantomjs", extraCapabilities = eCap)
+remDr$open()
 # open Chrome
 remDr$open()
 # go to webpage
 
 
 table_hyderabad <- tibble_(list(location = ~c("Hyderabad", "ZooPark"),
-                                date_min = ~c(ymd("2016-09-12"), ymd("2016-09-12")),
+                                date_min = ~c(ymd("2015-01-01"), ymd("2016-09-01")),
                                 no_parameters = ~c(15, 4)))
 table_hyderabad <- filter(table_hyderabad, location == "ZooPark")
 table_hyderabad <- group_by(table_hyderabad, location)
