@@ -18,7 +18,7 @@ remDr <- remoteDriver(browserName = "chrome")
 
 
 table_hyderabad <- tibble_(list(location = ~c("Hyderabad", "ZooPark"),
-                                date_min = ~c(ymd("2015-06-07"), ymd("2015-09-01")),
+                                date_min = ~c(ymd("2016-03-01"), ymd("2015-09-01")),
                                 no_parameters = ~c(15, 4)))
 
 table_hyderabad <- group_by(table_hyderabad, location)
@@ -30,10 +30,17 @@ table_hyderabad <- unnest_(table_hyderabad, "date_min")
 table_hyderabad <- table_hyderabad %>% 
   by_row(function(df){
     print(paste(df$location, df$date_min))
-    data_pm <- retrieve_data(location = df$location, 
+    data_pm <- try(retrieve_data(location = df$location, 
                   date_min = df$date_min, 
                   no_parameters = df$no_parameters,
-                  remDr = remDr)
+                  remDr = remDr))
+    while(class(data_pm) == "try-error"){
+      print("hey I'm trying once again")
+      data_pm <- try(retrieve_data(location = df$location, 
+                                   date_min = df$date_min, 
+                                   no_parameters = df$no_parameters,
+                                   remDr = remDr))
+    }
     if(nrow(data_pm)>1){
       readr::write_csv(data_pm[1:(nrow(data_pm)-2),],
                        path = paste0("data/pm25_", df$location, "_",
