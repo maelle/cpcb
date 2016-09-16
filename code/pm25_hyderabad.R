@@ -32,3 +32,7 @@ table_hyderabad <- table_hyderabad %>%
     retrieve_data(df$location, df$date_min, remDr)
   })
 
+table_hyderabad <- unnest_(table_hyderabad, ".out")
+table_hyderabad <- select_(table_hyderabad, quote(location), quote(concentration),
+                           quote(unit), quote(start), quote(end))
+readr::write_csv(table_hyderabad, path = "data/hyderabad_pm25.csv")
