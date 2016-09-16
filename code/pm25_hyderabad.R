@@ -18,30 +18,32 @@ remDr <- remoteDriver(browserName = "chrome")
 
 
 table_hyderabad <- tibble_(list(location = ~c("Hyderabad", "ZooPark"),
-                                date_min = ~c(ymd("2010-11-01"), ymd("2015-09-01")),
+                                date_min = ~c(ymd("2015-06-07"), ymd("2015-09-01")),
                                 no_parameters = ~c(15, 4)))
 
 table_hyderabad <- group_by(table_hyderabad, location)
 table_hyderabad <- mutate_(table_hyderabad,
                            date_min = interp(~list(seq(from = date_min, to = Sys.Date(),
-                                           by = "1 day"))))
+                                           by = "2 days"))))
 table_hyderabad <- unnest_(table_hyderabad, "date_min")
 
 table_hyderabad <- table_hyderabad %>% 
   by_row(function(df){
     print(paste(df$location, df$date_min))
-    retrieve_data(location = df$location, 
+    data_pm <- retrieve_data(location = df$location, 
                   date_min = df$date_min, 
                   no_parameters = df$no_parameters,
                   remDr = remDr)
+    if(nrow(data_pm)>1){
+      readr::write_csv(data_pm[1:(nrow(data_pm)-2),],
+                       path = paste0("data/pm25_", df$location, "_",
+                                     gsub("-", "_", as.character(df$date_min)),
+                                     ".csv"))
+    }
+    
+    return(NULL)
   })
 
-table_hyderabad <- unnest_(table_hyderabad, ".out")
-table_hyderabad <- select_(table_hyderabad, quote(location), quote(concentration),
-                           quote(unit), quote(start), quote(end))
-table_hyderabad <- mutate_(table_hyderabad,
-                           concentration = interp(~as.numeric(concentration)))
-readr::write_csv(table_hyderabad, path = "data/hyderabad_pm25.csv")
 
 
 library("ggplot2")

@@ -43,7 +43,9 @@ retrieve_data <- function(location, date_min, no_parameters, remDr){
   Sys.sleep(1)
   webElem <- remDr$findElement(using = 'id', value = "txtDateTo")
   webElem$clearElement()
-  webElem$sendKeysToElement(list(date))
+  webElem$sendKeysToElement(list(paste0(str_pad(day(date_min) + 1, 2, pad = "0"), "/",
+                                        month(date_min), "/",
+                                        year(date_min))))
   
   Sys.sleep(1)
   
