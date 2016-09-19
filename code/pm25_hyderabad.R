@@ -9,7 +9,7 @@ library("stringr")
 source("code/selPipe.R")
 
 table_hyderabad <- tibble_(list(location = ~c("Hyderabad", "ZooPark"),
-                                date_min = ~c(ymd("2016-09-17"), ymd("2016-09-17")),
+                                date_min = ~c(ymd("2015-04-17"), ymd("2015-09-01")),
                                 parameters = ~c("PM 2.5(PM2.5)", "PM2.5(PM2.5)")))
 
 table_hyderabad <- group_by(table_hyderabad, location)
@@ -41,4 +41,4 @@ table_hyderabad <- table_hyderabad %>%
   bind_rows()
 
 
-write_csv(table_hyderabad, path = "data/PM25_CPCB_Hyderabad.csv")
+readr::write_csv(table_hyderabad, path = "data/PM25_CPCB_Hyderabad.csv")
