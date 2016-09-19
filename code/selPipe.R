@@ -1,14 +1,16 @@
-library(seleniumPipes)
-library(RSelenium)
-library(rvest)
+library("seleniumPipes")
+library("RSelenium")
+library("rvest")
 
-# RSelenium::startServer(args = c("-Dwebdriver.chrome.driver=C:/Users/msalmon.ISGLOBAL/Documents/cpcb/chromedriver.exe")
-#                        , log = FALSE, invisible = FALSE)
-# remDr <- remoteDr(browserName = "chrome")
+RSelenium::startServer(args = c("-Dwebdriver.chrome.driver=C:/Users/msalmon.ISGLOBAL/Documents/cpcb/chromedriver.exe")
+                       , log = FALSE, invisible = FALSE)
+remDr <- remoteDr(browserName = "chrome")
 
 
-cpcb_data <- function(remDr, state = "Telangana", city = "Hyderabad", station= "Hyderabad", parameters = "Nitric Oxide(NO)",
-                      report = "Tabular", criteria = "1 Hours", date_from = "11/09/2016", date_to = "16/09/2016"){
+cpcb_data <- function(remDr, state = "Telangana", city = "Hyderabad",
+                      station= "Hyderabad", parameters = "Nitric Oxide(NO)",
+                      report = "Tabular", criteria = "1 Hours",
+                      date_from = "11/09/2016", date_to = "16/09/2016"){
   # Set state, city and station
   remDr %>% go("http://www.cpcb.gov.in/CAAQM/frmUserAvgReportCriteria.aspx") %>% 
     setSelect("ddlState", state) %>%                # set state
@@ -24,10 +26,45 @@ cpcb_data <- function(remDr, state = "Telangana", city = "Hyderabad", station= "
     elementClick
   
   # return table
-  remDr %>% findElement(using = 'css', value = "#gvReportStation table") %>% 
-    getElementAttribute("outerHTML") %>% 
-    read_html %>% 
-    html_table
+  table <- try(remDr %>% findElement(using = 'css', value = "#gvReportStation table"), TRUE)
+  if(!class(table) == "try-error"){
+    table <- table %>% 
+      getElementAttribute("outerHTML") %>% 
+      read_html %>% 
+      html_table %>%
+      .[[1]]
+
+    table <- rename_(table, "parameter" = "X1") 
+    table <-  rename_(table, "start_time" = "X2") 
+    table <-  rename_(table, "end_time" = "X3") 
+    table <-  rename_(table, "date" = "X4")
+    table <-  rename_(table, "concentration" = "X5")
+    table <-  rename_(table, "unit" = "X6") 
+    table <-  select_(table, quote("parameter"),
+              quote("start_time"),
+              quote("end_time"),
+              quote("date"),
+              quote("concentration"),
+              quote("unit")) 
+    
+    table <- mutate_(table, row = interp(~1:nrow(table)))
+    table <- group_by_(table, "row")
+    table <- mutate_(table, start = interp(~dmy_hms(paste(date, start_time))))
+    table <- mutate_(table, start = interp(~ force_tz(start, tzone = "Asia/Kolkata")))
+    table <- mutate_(table, end = interp(~dmy_hms(paste(date, end_time))))
+    table <- mutate_(table, end = interp(~ force_tz(start, tzone = "Asia/Kolkata")))
+    table <- select_(table, quote(- date))
+    table <- select_(table, quote(- start_time))
+    table <- select_(table, quote(- end_time))
+    table <- ungroup(table)
+    table <- select_(table, quote(- row))
+    table <- filter_(table, interp(~!is.na(start)))
+    table <- mutate_(table, location = ~station)
+    table <- mutate_(table, city = ~city)
+    return(table)
+  }else{
+    return(tibble())
+  }
 }
 
 # Utility function to set a select value
