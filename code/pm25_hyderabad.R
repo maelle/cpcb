@@ -22,7 +22,7 @@ table_hyderabad <- table_hyderabad %>%
   by_row(function(df){
     
     print(paste(df$location, df$date_min))
-    cpcb_data(remDr, state = "Telangana", city = "Hyderabad",
+    value <- try(cpcb_data(remDr, state = "Telangana", city = "Hyderabad",
               station= df$location, parameters = df$parameters,
               report = "Tabular", criteria = "1 Hours",
               date_from = paste0(str_pad(day(df$date_min), 2, pad = "0"),
@@ -32,7 +32,23 @@ table_hyderabad <- table_hyderabad %>%
               date_to = paste0(str_pad(day(df$date_min + 1), 2, pad = "0"),
                                "/",
                                month(df$date_min + 1), "/",
-                               year(df$date_min + 1)))
+                               year(df$date_min + 1))))
+    while(class(value) == "try-error"){
+      print("error, try again")
+      value <- try(cpcb_data(remDr, state = "Telangana", city = "Hyderabad",
+                             station= df$location, parameters = df$parameters,
+                             report = "Tabular", criteria = "1 Hours",
+                             date_from = paste0(str_pad(day(df$date_min), 2, pad = "0"),
+                                                "/",
+                                                month(df$date_min), "/",
+                                                year(df$date_min)), 
+                             date_to = paste0(str_pad(day(df$date_min + 1), 2, pad = "0"),
+                                              "/",
+                                              month(df$date_min + 1), "/",
+                                              year(df$date_min + 1))))
+    }
+    
+    value
     
   })
 
