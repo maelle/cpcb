@@ -58,3 +58,4 @@ table_hyderabad <- table_hyderabad %>%
 
 
 readr::write_csv(table_hyderabad, path = "data/PM25_CPCB_Hyderabad.csv")
+rm(list=ls())
