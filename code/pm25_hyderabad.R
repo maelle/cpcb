@@ -33,7 +33,8 @@ table_hyderabad <- table_hyderabad %>%
                                "/",
                                month(df$date_min + 1), "/",
                                year(df$date_min + 1))))
-    while(class(value) == "try-error"){
+    try <- 0
+    while(class(value) == "try-error" & try <= 20){
       print("error, try again")
       value <- try(cpcb_data(remDr, state = "Telangana", city = "Hyderabad",
                              station= df$location, parameters = df$parameters,
@@ -46,6 +47,7 @@ table_hyderabad <- table_hyderabad %>%
                                               "/",
                                               month(df$date_min + 1), "/",
                                               year(df$date_min + 1))))
+      try <- try + 1
     }
     
     value
