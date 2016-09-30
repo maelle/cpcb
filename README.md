@@ -6,7 +6,7 @@ The primary goal of the code of this repo is to learn how to automatically scrap
 
  My first goal (and primary motivation) is to get all PM2.5 data for the two stations in Hyderabad, see [this file](code/pm25_hyderabad.R). The function for scraping data for a given day and location is in [this file](code/selPipe.R). 
 
-The downloaded data was saved in a csv file which I don't include here because I don't know if I can. 
+The downloaded data was saved in a csv file which I don't include here because I don't know if I can (please refer to the original source for licensing questions). That said, you can contact me and I might send it to you. :smile_cat:
 
 # Making all the data easier to use 
 
